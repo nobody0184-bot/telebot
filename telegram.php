@@ -28,14 +28,20 @@ function telegram_request(string $method, array $fields): array
 
 function send_schedule_message(array $schedule, string $chatId): void
 {
+    $now = new DateTimeImmutable('now', new DateTimeZone(APP_TIMEZONE));
+    $message = str_replace(
+        ['{{date}}', '{{datetime}}'],
+        [$now->format('d-m-Y'), $now->format('d-m-Y H:i')],
+        $schedule['message']
+    );
     $method = 'sendMessage';
-    $fields = ['chat_id' => $chatId, 'text' => $schedule['message']];
+    $fields = ['chat_id' => $chatId, 'text' => $message];
     if ($schedule['media_type'] === 'photo') {
         $method = 'sendPhoto';
-        $fields = ['chat_id' => $chatId, 'photo' => new CURLFile(__DIR__ . '/' . $schedule['media_path']), 'caption' => $schedule['message']];
+        $fields = ['chat_id' => $chatId, 'photo' => new CURLFile(__DIR__ . '/' . $schedule['media_path']), 'caption' => $message];
     } elseif ($schedule['media_type'] === 'video') {
         $method = 'sendVideo';
-        $fields = ['chat_id' => $chatId, 'video' => new CURLFile(__DIR__ . '/' . $schedule['media_path']), 'caption' => $schedule['message']];
+        $fields = ['chat_id' => $chatId, 'video' => new CURLFile(__DIR__ . '/' . $schedule['media_path']), 'caption' => $message];
     }
     telegram_request($method, $fields);
 }

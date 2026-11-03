@@ -11,6 +11,8 @@
 
 The schedule time uses `Asia/Dhaka`. Select one or more weekdays and one or more destinations. The scheduler records delivery errors in the **Errors** page.
 
+Message templates support `{{date}}` for the current date (`dd-mm-yyyy`) and `{{datetime}}` for the current date and time.
+
 ## Cron
 
 Configure the hosting cron to request this URL every minute:
