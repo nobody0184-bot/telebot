@@ -3,7 +3,7 @@
 ## Local setup
 
 1. Create a MySQL database named `telegram_scheduler`.
-2. Edit the database settings and `TELEGRAM_BOT_TOKEN` in `config.php`.
+2. Copy `config.local.example.php` to `config.local.php`, then set the database password and BotFather token in `config.local.php`. This file is ignored by Git and must never be committed. The database name and user are already configured for the supplied Hostinger database.
 3. Open `install.php` once and create the admin account.
 4. Delete `install.php`.
 5. In Telegram, add the bot as an administrator of each target group/channel. The bot needs permission to post messages.

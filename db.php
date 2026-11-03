@@ -11,9 +11,9 @@ function db(): PDO
     }
 
     $pdo = new PDO(
-        'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',
-        DB_USER,
-        DB_PASS,
+        'mysql:host=' . config_value('TELBOT_DB_HOST', DB_HOST) . ';dbname=' . config_value('TELBOT_DB_NAME', DB_NAME) . ';charset=utf8mb4',
+        config_value('TELBOT_DB_USER', DB_USER),
+        config_value('TELBOT_DB_PASS', DB_PASS),
         [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,

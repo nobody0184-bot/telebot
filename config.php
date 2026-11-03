@@ -3,14 +3,23 @@ declare(strict_types=1);
 
 session_start();
 
-const DB_HOST = 'localhost';
-const DB_NAME = 'telegram_scheduler';
-const DB_USER = 'root';
-const DB_PASS = '';
-const TELEGRAM_BOT_TOKEN = 'PUT_BOT_TOKEN_HERE';
-const APP_TIMEZONE = 'Asia/Dhaka';
+$localConfig = __DIR__ . '/config.local.php';
+$local = is_file($localConfig) ? require $localConfig : [];
+
+define('DB_HOST', $local['db_host'] ?? 'localhost');
+define('DB_NAME', $local['db_name'] ?? 'u556541716_telebot');
+define('DB_USER', $local['db_user'] ?? 'u556541716_telebot');
+define('DB_PASS', $local['db_pass'] ?? '');
+define('TELEGRAM_BOT_TOKEN', $local['telegram_bot_token'] ?? 'PUT_BOT_TOKEN_HERE');
+define('APP_TIMEZONE', $local['timezone'] ?? 'Asia/Dhaka');
 
 date_default_timezone_set(APP_TIMEZONE);
+
+function config_value(string $name, string $fallback): string
+{
+    $value = getenv($name);
+    return $value === false ? $fallback : $value;
+}
 
 function app_url(string $path = ''): string
 {
