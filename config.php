@@ -6,9 +6,9 @@ session_start();
 $localConfig = __DIR__ . '/config.local.php';
 $local = is_file($localConfig) ? require $localConfig : [];
 
-define('DB_HOST', $local['db_host'] ?? 'localhost');
-define('DB_NAME', $local['db_name'] ?? 'u556541716_telebot');
-define('DB_USER', $local['db_user'] ?? 'u556541716_telebot');
+define('DB_HOST', $local['db_host'] ?? 'sql313.infinityfree.com');
+define('DB_NAME', $local['db_name'] ?? 'if0_43345768_telbot');
+define('DB_USER', $local['db_user'] ?? 'if0_43345768');
 define('DB_PASS', $local['db_pass'] ?? '');
 define('TELEGRAM_BOT_TOKEN', $local['telegram_bot_token'] ?? 'PUT_BOT_TOKEN_HERE');
 define('APP_TIMEZONE', $local['timezone'] ?? 'Asia/Dhaka');
