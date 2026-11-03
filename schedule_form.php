@@ -4,16 +4,17 @@ require_once __DIR__ . '/bootstrap.php';
 require_once __DIR__ . '/auth_header.php';
 $id = (int)($_GET['id'] ?? $_POST['id'] ?? 0);
 $schedule = ['title' => '', 'message' => '', 'time_of_day' => '09:00:00', 'days_mask' => 127, 'active' => 1, 'media_path' => null, 'media_type' => 'none'];
-$selectedDestinations = [];
+$selectedChatIds = ['', ''];
 if ($id) {
     $stmt = db()->prepare('SELECT * FROM schedules WHERE id = ?');
     $stmt->execute([$id]);
     $schedule = $stmt->fetch() ?: $schedule;
-    $stmt = db()->prepare('SELECT destination_id FROM schedule_destinations WHERE schedule_id = ?');
+    $stmt = db()->prepare('SELECT d.chat_id FROM destinations d JOIN schedule_destinations sd ON sd.destination_id = d.id WHERE sd.schedule_id = ? ORDER BY d.id LIMIT 2');
     $stmt->execute([$id]);
-    $selectedDestinations = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+    foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $index => $chatId) {
+        $selectedChatIds[$index] = $chatId;
+    }
 }
-$destinations = db()->query('SELECT * FROM destinations ORDER BY name')->fetchAll();
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
@@ -21,8 +22,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $title = trim($_POST['title'] ?? '');
         $message = trim($_POST['message'] ?? '');
         $daysMask = array_sum(array_map('intval', $_POST['days'] ?? []));
-        $destinationIds = array_map('intval', $_POST['destinations'] ?? []);
-        if ($title === '' || $message === '' || $daysMask === 0 || !$destinationIds) throw new RuntimeException('Title, message, at least one day and destination are required.');
+        $chatIds = array_values(array_unique(array_filter(array_map('trim', $_POST['chat_ids'] ?? []))));
+        if ($title === '' || $message === '' || $daysMask === 0 || !$chatIds) throw new RuntimeException('Title, message, at least one day and destination are required.');
+        if (count($chatIds) > 2) throw new RuntimeException('A maximum of two destinations is supported.');
         $mediaPath = $schedule['media_path'];
         $mediaType = $schedule['media_type'];
         if (!empty($_FILES['media']['name'])) {
@@ -36,6 +38,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mediaPath = 'uploads/' . $name;
         }
         db()->beginTransaction();
+        $destinationIds = [];
+        foreach ($chatIds as $chatId) {
+            $destinationName = str_starts_with($chatId, '@') ? substr($chatId, 1) : $chatId;
+            $stmt = db()->prepare('INSERT INTO destinations (name, chat_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name)');
+            $stmt->execute([$destinationName, $chatId]);
+            $lookup = db()->prepare('SELECT id FROM destinations WHERE chat_id=?');
+            $lookup->execute([$chatId]);
+            $destinationIds[] = (int)$lookup->fetchColumn();
+        }
         if ($id) {
             $stmt = db()->prepare('UPDATE schedules SET title=?, message=?, media_path=?, media_type=?, time_of_day=?, days_mask=?, active=? WHERE id=?');
             $stmt->execute([$title, $message, $mediaPath, $mediaType, $_POST['time_of_day'], $daysMask, isset($_POST['active']) ? 1 : 0, $id]);
@@ -62,6 +73,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <label>Title<input name="title" value="<?= e($schedule['title']) ?>" required></label><label>Time<input type="time" name="time_of_day" value="<?= e(substr($schedule['time_of_day'],0,5)) ?>" required></label>
 <label class="full">Message / caption<textarea name="message" rows="6" required><?= e($schedule['message']) ?></textarea></label>
 <fieldset class="full"><legend>Days</legend><?php foreach (day_options() as $bit => $label): ?><label class="inline"><input type="checkbox" name="days[]" value="<?= $bit ?>" <?= (($schedule['days_mask'] & $bit) ? 'checked' : '') ?>> <?= e($label) ?></label><?php endforeach; ?></fieldset>
-<label class="full">Destinations<select name="destinations[]" multiple required><?php foreach ($destinations as $destination): ?><option value="<?= (int)$destination['id'] ?>" <?= in_array((int)$destination['id'], $selectedDestinations, true) ? 'selected' : '' ?>><?= e($destination['name']) ?> (<?= e($destination['chat_id']) ?>)</option><?php endforeach; ?></select></label>
+<label>Destination 1 (Chat ID)<input name="chat_ids[]" value="<?= e($selectedChatIds[0]) ?>" placeholder="@channel or -100..." required></label><label>Destination 2 (Chat ID)<input name="chat_ids[]" value="<?= e($selectedChatIds[1]) ?>" placeholder="Optional"></label>
 <label>Photo/video (optional)<input type="file" name="media" accept="image/*,video/*"></label><label class="inline"><input type="checkbox" name="active" <?= $schedule['active'] ? 'checked' : '' ?>> Active</label><div class="full"><button>Save schedule</button></div></form>
 <?php require __DIR__ . '/footer.php'; ?>
