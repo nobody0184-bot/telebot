@@ -1,0 +1,4 @@
+/uploads/*
+!/uploads/.htaccess
+config.local.php
+.env
