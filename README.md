@@ -1,5 +1,9 @@
 # Telegram Scheduler
 
+## Live site
+
+https://navajowhite-bee-373965.hostingersite.com/
+
 ## Local setup
 
 1. Create a MySQL database named `telegram_scheduler`.
@@ -17,6 +21,6 @@ Message templates support `{{date}}` for the current date (`dd-mm-yyyy`) and `{{
 
 Configure the hosting cron to request this URL every minute:
 
-`https://telbot.page.gd/cron.php`
+`https://navajowhite-bee-373965.hostingersite.com/cron.php`
 
-The script is safe to call repeatedly within the same minute. If InfinityFree does not provide a usable cron feature, use an external HTTP cron service to request the same URL every minute.
+The script is safe to call repeatedly within the same minute. If the hosting provider does not provide a usable cron feature, use an external HTTP cron service to request the same URL every minute.
